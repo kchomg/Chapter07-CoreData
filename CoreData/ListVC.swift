@@ -30,6 +30,64 @@ class ListVC: UITableViewController {
         return result
     }
     
+    // 데이터를 저장할 메소드
+    func save(title: String, contents: String) -> Bool {
+        // 1. 앱 델리게이트 객체 참조
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        
+        // 2. 관리 객체 컨텍스트 참조
+        let context = appDelegate.persistentContainer.viewContext
+        
+        // 3. 관리 객체 생성 & 값을 설정
+        let object = NSEntityDescription.insertNewObject(forEntityName: "Board", into: context)
+        object.setValue(title, forKey: "title")
+        object.setValue(contents, forKey: "contents")
+        object.setValue(Date(), forKey: "regdate")
+        
+        // 4. 영구 저장소에 커밋되고 나면 list 프로퍼티에 추가한다.
+        do {
+            try context.save()
+            self.list.append(object)
+            return true
+        } catch {
+            context.rollback()
+            return false
+        }
+    }
+    
+    // 데이터 저장 버튼에 대한 액션 메소드
+    @objc func add(_ sender: Any) {
+        let alert = UIAlertController(title: "게시글 등록", message: nil, preferredStyle: .alert)
+        
+        // 입력 필드 추가
+        alert.addTextField { (tf) in
+            tf.placeholder = "제목"
+        }
+        alert.addTextField { (tf) in
+            tf.placeholder = "내용"
+        }
+        
+        // 버튼 추가(Cancel & Save)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { (_) in
+            guard let title = alert.textFields?.first?.text, let contents = alert.textFields?.last?.text else {
+                return
+            }
+            // 값을 저장하고, 성공이면 테이블 뷰를 리로드한다.
+            if self.save(title: title, contents: contents) == true {
+                self.tableView.reloadData()
+            }
+        }))
+        self.present(alert, animated: false, completion: nil)
+    }
+    
+    // 화면 및 로직 초기화 메소드
+    override func viewDidLoad() {
+        let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(add(_:)))
+        
+        self.navigationItem.rightBarButtonItem = addBtn
+    }
+    
     // 테이블 뷰 데이터 소스용 프로토콜 메소드
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.list.count
