@@ -73,6 +73,26 @@ class ListVC: UITableViewController {
         }
     }
     
+    // 데이터 수정 처리할 메소드
+    func edit(object: NSManagedObject, title: String, contents: String) -> Bool {
+        // 1. 앱 델리게이트 객체 참조
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        // 2. 관리 객체 컨텍스트 참조
+        let context = appDelegate.persistentContainer.viewContext
+        // 3. 관리 객체의 값을 수정
+        object.setValue(title, forKey: "title")
+        object.setValue(contents, forKey: "contents")
+        object.setValue(Date(), forKey: "regdate")
+        // 4. 영구 저장소에 반영한다
+        do {
+            try context.save()
+            return true
+        } catch {
+            context.rollback()
+            return false
+        }
+    }
+    
     // 데이터 저장 버튼에 대한 액션 메소드
     @objc func add(_ sender: Any) {
         let alert = UIAlertController(title: "게시글 등록", message: nil, preferredStyle: .alert)
@@ -138,5 +158,36 @@ class ListVC: UITableViewController {
             self.list.remove(at: indexPath.row)
             self.tableView.deleteRows(at: [indexPath], with: .fade)
         }
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // 1. 선택된 행에 해당하는 데이터 가져오기
+        let object = self.list[indexPath.row]
+        let title = object.value(forKey: "title") as? String
+        let contents = object.value(forKey: "contents") as? String
+        
+        let alert = UIAlertController(title: "게시글 수정", message: nibName, preferredStyle: .alert)
+        
+        // 2. 입력 필드 추가(기존 값 입력)
+        alert.addTextField { (tf) in
+            tf.text = title
+        }
+        alert.addTextField { (tf) in
+            tf.text = contents
+        }
+        
+        // 3. 버튼 추가(Cancel & Save)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { (_) in
+            guard let title = alert.textFields?.first?.text, let contents = alert.textFields?.last?.text else {
+                return
+            }
+            
+            // 4. 값을 수정하는 메소드를 호출하고, 그 결과가 성공이면 테이블 뷰를 리로드한다.
+            if self.edit(object: object, title: title, contents: contents) == true {
+                self.tableView.reloadData()
+            }
+        }))
+        self.present(alert, animated: false, completion: nil)
     }
 }
