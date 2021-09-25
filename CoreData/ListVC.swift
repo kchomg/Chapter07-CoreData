@@ -25,6 +25,10 @@ class ListVC: UITableViewController {
         // 3. 요청 객체 생성
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Board")
         
+        // 3-1. 정렬 속성 설정
+        let sort = NSSortDescriptor(key: "regdate", ascending: false)
+        fetchRequest.sortDescriptors = [sort]
+        
         // 4. 데이터 가져오기
         let result = try! context.fetch(fetchRequest)
         return result
@@ -47,7 +51,8 @@ class ListVC: UITableViewController {
         // 4. 영구 저장소에 커밋되고 나면 list 프로퍼티에 추가한다.
         do {
             try context.save()
-            self.list.append(object)
+//            self.list.append(object)
+            self.list.insert(object, at: 0) // 새 게시글 등록시 0번 인덱스에 삽입
             return true
         } catch {
             context.rollback()
@@ -86,6 +91,7 @@ class ListVC: UITableViewController {
         // 4. 영구 저장소에 반영한다
         do {
             try context.save()
+            self.list = self.fetch() // list 배열을 갱신한다.
             return true
         } catch {
             context.rollback()
@@ -185,7 +191,16 @@ class ListVC: UITableViewController {
             
             // 4. 값을 수정하는 메소드를 호출하고, 그 결과가 성공이면 테이블 뷰를 리로드한다.
             if self.edit(object: object, title: title, contents: contents) == true {
-                self.tableView.reloadData()
+//                self.tableView.reloadData()
+                
+                // 추가된 코드 1) 셀의 내용을 직접 수정한다.
+                let cell = self.tableView.cellForRow(at: indexPath)
+                cell?.textLabel?.text = title
+                cell?.detailTextLabel?.text = contents
+                
+                // 추가된 코드 2) 수정된 셀을 첫 번째 행으로 이동시킨다.
+                let firstIndexPath = IndexPath(item: 0, section: 0)
+                self.tableView.moveRow(at: indexPath, to: firstIndexPath) // at 해당하는 변수를 to 위치로 옮겨 주는 역할
             }
         }))
         self.present(alert, animated: false, completion: nil)
