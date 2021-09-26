@@ -224,4 +224,12 @@ class ListVC: UITableViewController {
         }))
         self.present(alert, animated: false, completion: nil)
     }
+    
+    // 이 메소드가 구현되어 있을 경우 액세서리 영역을 탭하더라도 didSelectRowAt 메소드가 실행되지 않는다.
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        let object = self.list[indexPath.row]
+        let uvc = self.storyboard?.instantiateViewController(withIdentifier: "LogVC") as! LogVC
+        uvc.board = (object as! BoardMO)
+        self.show(uvc, sender: self)
+    }
 }

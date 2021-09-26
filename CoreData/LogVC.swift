@@ -27,7 +27,7 @@ class LogVC: UITableViewController {
         let row = self.list[indexPath.row]
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "logcell")!
-        cell.textLabel?.text = "\(row.regdate)에 \(row.type.toLogType())되었습니다."
+        cell.textLabel?.text = "\(row.regdate!)에 \(row.type.toLogType())되었습니다."
         cell.textLabel?.font = UIFont.systemFont(ofSize: 12)
         
         return cell
