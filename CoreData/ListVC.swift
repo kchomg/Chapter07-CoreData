@@ -48,6 +48,13 @@ class ListVC: UITableViewController {
         object.setValue(contents, forKey: "contents")
         object.setValue(Date(), forKey: "regdate")
         
+        // 3-1. Log관리 객체 생성 및 어트리뷰트에 값 대입
+        let logObject = NSEntityDescription.insertNewObject(forEntityName: "Log", into: context) as! LogMO
+        logObject.regdate = Date()
+        logObject.type = LogType.create.rawValue
+        // 3-2. 게시글 객체의 logs 속성에 새로 생성된 로그 객체 추가
+        (object as! BoardMO).addToLogs(logObject)
+        
         // 4. 영구 저장소에 커밋되고 나면 list 프로퍼티에 추가한다.
         do {
             try context.save()
@@ -64,10 +71,13 @@ class ListVC: UITableViewController {
     func delete(object: NSManagedObject) -> Bool {
         // 1. 앱 델리게이트 객체 참조
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        
         // 2. 관리 객체 컨텍스트 참조
         let context = appDelegate.persistentContainer.viewContext
+        
         // 3. 컨텍스트로부터 해당 객체 삭제
         context.delete(object)
+        
         // 4. 영구 저장소에 커밋한다.
         do {
             try context.save()
@@ -82,12 +92,21 @@ class ListVC: UITableViewController {
     func edit(object: NSManagedObject, title: String, contents: String) -> Bool {
         // 1. 앱 델리게이트 객체 참조
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        
         // 2. 관리 객체 컨텍스트 참조
         let context = appDelegate.persistentContainer.viewContext
+        
         // 3. 관리 객체의 값을 수정
         object.setValue(title, forKey: "title")
         object.setValue(contents, forKey: "contents")
         object.setValue(Date(), forKey: "regdate")
+        // 3-1. Log 관리 객체 생성 및 어트리뷰트에 값 대입
+        let logObject = NSEntityDescription.insertNewObject(forEntityName: "Log", into: context) as! LogMO
+        logObject.regdate = Date()
+        logObject.type = LogType.edit.rawValue
+        // 3-2. 게시글 객체의 logs 속성에 새로 생성된 로그 객체 추가
+        (object as! BoardMO).addToLogs(logObject)
+        
         // 4. 영구 저장소에 반영한다
         do {
             try context.save()
